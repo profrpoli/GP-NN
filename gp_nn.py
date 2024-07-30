@@ -1,6 +1,5 @@
 from __future__ import division
 from sympy import *
-from xlrd import open_workbook
 from functools import partial
 from multiprocessing import Pool
 import math
@@ -16,7 +15,7 @@ class NeuralNetwork:
         ####Reading Data From xlsx File
         self.filename=filename
         self.train_rate=train
-        realdata = np.array(pd.read_csv('./data/%s.csv'%(filename), delimiter=";"), dtype=float)
+        realdata = np.array(pd.read_csv('./data/%s.csv'%(filename), delimiter=","), dtype=float)
 
         ####Normalization of Data (Max-Min)
         self.data=(realdata - np.min(realdata, axis=0))/(np.max(realdata, axis=0)-np.min(realdata, axis=0))
@@ -46,12 +45,11 @@ class NeuralNetwork:
             for j in range(self.Layers[i]):
                 self.weights[i] = np.random.uniform(low=-1.0, high=1.0, size=(self.Layers[i], self.Layers[i + 1] - 1))
                 self.delweights[i] = np.empty(shape=(self.Layers[i], self.Layers[i + 1] - 1))
-        W = []
+        self.init_W = []
         for i in range(len(self.Layers) - 1):
             for j in range(self.Layers[i]):
                 for k in range(self.Layers[i + 1] - 1):
-                    W.append(self.weights[i][j][k])
-        self.init_W=np.array(W)
+                    self.init_W.append(self.weights[i][j][k])
 
     def calc_in_out(self,row):  # Calculation of neurons' sigmoid outputs and net inputs
         self.row = row
@@ -423,7 +421,7 @@ if __name__ == '__main__':
     parameters_saving(saving=False, test=False)
     #g.fitness = lambda p: -(c.evaluate(p))
     begin = time.time()
-    sbp = np.array([ 13, 8, 9, 18, 9, 19, 2, 12, 19, 2, 16, 19])
+    sbp = np.array([23])
     sbp_tse = np.zeros(N[0][0].epochs)
     for i in range(len(N)):
         for j in range(len(N[i])):
@@ -486,10 +484,3 @@ if __name__ == '__main__':
         list(best)) + "\n\n"
                       "Best program expression:\t" + str(r0) + "\n")
     file.close()
-
-
-
-
-
-
-

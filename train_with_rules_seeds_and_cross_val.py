@@ -7,7 +7,6 @@ import pylab as P
 import pandas as pd
 import time
 import pathlib
-import matplotlib.pyplot as plt
 import scipy as S
 import os
 from sklearn.model_selection import train_test_split
@@ -63,15 +62,15 @@ class NeuralNetwork:
             self.structure.append(1 + h)
 
         self.W = []
+        self.delW = []
+        self.prevdelW = []
         for i in range(len(self.structure) - 1):
             self.W.append(0.1 * np.random.randn(self.structure[i], self.structure[i + 1] - 1))
-            #self.W[-1] = np.insert(self.W[-1], 0, 0., axis=0)
-            # self.W[-1][0] *= 0
+            self.delW.append(np.zeros((self.structure[i], self.structure[i + 1] - 1)))
+            self.prevdelW.append(np.zeros((self.structure[i], self.structure[i + 1] - 1)))
         self.W.append(0.1 * np.random.randn(self.structure[-1], target_dim))
-        #self.W[-1] = np.insert(self.W[-1], 0, 0., axis=0)
-        self.W = np.array(self.W)
-        self.delW = self.W * 0.
-        self.prevdelW = self.W * 0.
+        self.delW.append(np.zeros((self.structure[-1], target_dim)))
+        self.prevdelW.append(np.zeros((self.structure[-1], target_dim)))
 
         self.filename = filename
         self.batch_size = batch_size
@@ -250,8 +249,9 @@ class NeuralNetwork:
         # self.delb[0] = np.sum(self.dr_hidden[0] * self.er_hidden[0])
 
     def update_weight(self):
-        self.W += -(self.delW * self.lr + self.prevdelW * self.mu)
-        self.prevdelW = self.delW * self.lr + self.prevdelW * self.mu
+        for i in range (len(self.W)):
+            self.W[i] += -(self.delW[i] * self.lr + self.prevdelW[i] * self.mu)
+            self.prevdelW[i] = self.delW[i] * self.lr + self.prevdelW[i] * self.mu
 
     def test(self):
         ls = self.forward_propagation(self.train_X, self.train_Y)
@@ -294,18 +294,14 @@ def param_save():
     file.writelines('rule : %s \nproblem: %s \t epochs: %d\tstructure: %d-%s-%d '
                     '\t batch_size: %d,\tdata norm: %s\n lr: %s\n\n'
                     % (ruleexp, filename, epoch, inp_dim, str(hidden),
-                       target_dim, batch_size, str(data_norm), str(lr_arange)))
+                       target_dim, batch_size, str(data_norm), str(lr)))
     file.close()
 
 
 def csv_save(bp, lr, graph_type):
     np.savetxt('%s/learning rate/%.2f/%s_%s.csv' % (folder, lr, n.filename, graph_type), bp, delimiter=",")
 
-
-
-P.ion()
-P.figure()
-problem_name='iris'
+filename='iris'
 number_of_seeds = 20
 epoch = 1000
 lr = 0.8
@@ -334,33 +330,32 @@ lr_bp_train_ac_trm = []
 lr_bp_test_ac_trm = []
 
 if __name__ == '__main__':
-    pool = Pool(3)
+    pool = Pool(20)
     for rule, ruleexp in zip(rules, ruleexps):
         folder1 = ('%s/testing_rules/csv file with cross val_size%d/%s/%s' % (mypath, cv_fold_numb, activation, rule))
-        folder = ('%s/%s' % (folder1, problem_name))
+        folder = ('%s/%s' % (folder1, filename))
         param_save()
         w_list = []
         for seed in range(number_of_seeds):
-            n = NeuralNetwork(filename=problem_name, epoch=epoch, lr=lr, mu=0, inp_dim=inp_dim, target_dim=target_dim,
+            n = NeuralNetwork(filename=filename, epoch=epoch, lr=lr, mu=0, inp_dim=inp_dim, target_dim=target_dim,
                               hidden=hidden, batch_size=batch_size, test_split=test_split, activation=activation, rule=rule,
                               seed=seed, data_norm=data_norm, shuffle=shuffle)
-            n.upload_data(problem_name)
+            n.upload_data(filename)
 
             w_list.append(n.W)
 
-        for lr in lr_arange:
-            print('rule:',rule, 'learningrate=', lr)
-            pathlib.Path('%s/learning rate/%.2f' % (folder, lr)).mkdir(parents=True, exist_ok=True)
+        print('rule:',rule, 'learningrate=', lr)
+        pathlib.Path('%s/learning rate/%.2f' % (folder, lr)).mkdir(parents=True, exist_ok=True)
 
-            n.lr = lr
-            begin = time.time()
-            bp_results = np.array(pool.map(partial(evaluate, n=n), w_list))
-            tss_bp = bp_results[:, 0]
-            train_ac_bp = bp_results[:, 1]
-            valid_ac_bp = bp_results[:, 2]
+        n.lr = lr
+        begin = time.time()
+        bp_results = np.array(pool.map(partial(evaluate, n=n), w_list))
+        tss_bp = bp_results[:, 0]
+        train_ac_bp = bp_results[:, 1]
+        valid_ac_bp = bp_results[:, 2]
 
-            print('%s (%s) has been computed in \t%s seconds:' % (n.problem_name, rule, str(time.time() - begin)))
+        print('%s (%s) has been computed in \t%s seconds:' % (n.filename, rule, str(time.time() - begin)))
 
-            csv_save(train_ac_bp, lr, 'train_ac')
-            csv_save(valid_ac_bp, lr, 'valid_ac')
-            csv_save(tss_bp, lr, 'loss')
+        csv_save(train_ac_bp, lr, 'train_ac')
+        csv_save(valid_ac_bp, lr, 'valid_ac')
+        csv_save(tss_bp, lr, 'loss')
