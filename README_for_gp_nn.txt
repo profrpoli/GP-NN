@@ -56,10 +56,8 @@ In the main program,
    tournament size.
 
 
-   sbp, np.array([ 13, 8, 9, 18, 9, 19, 2, 12, 19, 2, 16, 19]), is an
-   array that produce the standard backpropagation (SBP) learning rule
-   when instructions in the index given by the array are sequentially
-   executed.
+   sbp, np.array([23]), is an
+   array containing only the opcode that copies register rSBP into the output register r0 thus producing the standard backpropagation (SBP) learning rule.
 
    If the instruction list changes by adding new instructions,
    removing some instructions, and/or changing the order of the
