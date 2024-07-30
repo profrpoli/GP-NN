@@ -57,7 +57,8 @@ In the main program,
 
 
    sbp, np.array([23]), is an
-   array containing only the opcode that copies register rSBP into the output register r0 thus producing the standard backpropagation (SBP) learning rule.
+   array containing only the opcode that copies register rSBP into the output 
+   register r0 thus producing the standard backpropagation (SBP) learning rule.
 
    If the instruction list changes by adding new instructions,
    removing some instructions, and/or changing the order of the
