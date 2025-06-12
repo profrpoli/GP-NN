@@ -93,6 +93,8 @@ class NeuralNetwork:
         X=realdata[:, :inp_dim]
         y=realdata[:, inp_dim:]
         X, self.test_X, y, self.test_Y = train_test_split(X, y, test_size = test_split, random_state = 42)
+        if data_norm:
+            self.test_X = (self.test_X - self.X.min(axis=0)) / (self.X.max(axis=0) - self.X.min(axis=0))
 
         self.folds_X = [None] * cv_fold_numb
         self.folds_Y = [None] * cv_fold_numb
@@ -102,8 +104,6 @@ class NeuralNetwork:
         self.folds_Y[-1] = y
 
         self.test_Y = np.array(self.test_Y, dtype=int).flatten()
-        if data_norm:
-            self.test_X = (self.test_X - self.test_X.min(axis=0)) / (self.test_X.max(axis=0) - self.test_X.min(axis=0))
 
     def enumerate_classes(self, a):
         a = np.array(sorted(a, key=itemgetter(len(a[0]) - 1)))
@@ -137,7 +137,7 @@ class NeuralNetwork:
 
         if data_norm:
             self.train_X = (self.train_X - self.train_X.min(axis=0)) / (self.train_X.max(axis=0) - self.train_X.min(axis=0))
-            self.valid_X = (self.valid_X - self.valid_X.min(axis=0)) / (self.valid_X.max(axis=0) - self.valid_X.min(axis=0))
+            self.valid_X = (self.valid_X - self.train_X.min(axis=0)) / (self.train_X.max(axis=0) - self.train_X.min(axis=0))
 
 
     def get_data(self, batch):
