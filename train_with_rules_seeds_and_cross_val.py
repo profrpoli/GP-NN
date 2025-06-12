@@ -136,9 +136,12 @@ class NeuralNetwork:
         self.valid_Y = np.array(self.valid_Y, dtype=int).flatten()
 
         if data_norm:
-            self.train_X = (self.train_X - self.train_X.min(axis=0)) / (self.train_X.max(axis=0) - self.train_X.min(axis=0))
-            self.valid_X = (self.valid_X - self.train_X.min(axis=0)) / (self.train_X.max(axis=0) - self.train_X.min(axis=0))
-
+            min_vals = self.train_X.min(axis=0)
+            max_vals = self.train_X.max(axis=0)
+            range_vals = max_vals - min_vals
+        
+            self.train_X = (self.train_X - min_vals) / range_vals
+            self.valid_X = (self.valid_X - min_vals) / range_vals
 
     def get_data(self, batch):
         if self.shuffle:
